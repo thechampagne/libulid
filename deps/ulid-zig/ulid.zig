@@ -12,26 +12,24 @@ pub const UlidError = error {
 };
 
 pub const Ulid = struct {
-    time: u64,
-    rand: u128,
-    is_undefined: bool,
+    time: ?u64,
+    rand: ?u128,
 
     const Self = @This();
 
     pub fn new() Ulid {
         return Ulid {
-            .time = undefined,
-            .rand = undefined,
-            .is_undefined = true
+            .time = null,
+            .rand = null
         };
     }
 
     pub fn source(self: *Self) UlidError!u128{
         const timestamp = @intCast(u64, std.time.milliTimestamp());
-        if (!self.is_undefined) {
+        if (self.time != null) {
             if (self.time == timestamp) {
                 if (self.rand != MAX_RAND) {
-                    self.rand += 1;
+                    self.rand.? += 1;
                     return self.gen_bit();
                 } else {
                     return UlidError.MaxRand;
@@ -53,7 +51,7 @@ pub const Ulid = struct {
     }
 
     fn gen_bit(self: Self) u128 {
-        return @as(u128, self.time) << 80 | self.rand;
+        return @as(u128, self.time.?) << 80 | self.rand.?;
     }
 
     fn ulid_bit(self: Self) [ULID_BIT_LEN:0]u8 {
